@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package inference.v1;
+
+service InferenceWorker {
+  rpc Predict(PredictRequest) returns (PredictResponse);
+  rpc GetStatus(StatusRequest) returns (StatusResponse);
+}
+
+message PredictRequest {
+  string request_id = 1;
+  string model_version = 2;
+  repeated string inputs = 3;
+}
+
+message Prediction {
+  string label = 1;
+  double score = 2;
+}
+
+message WorkerTiming {
+  double queue_ms = 1;
+  double preprocess_ms = 2;
+  double inference_ms = 3;
+  double postprocess_ms = 4;
+  double worker_total_ms = 5;
+}
+
+message PredictResponse {
+  string request_id = 1;
+  string model_version = 2;
+  string worker_id = 3;
+  repeated Prediction predictions = 4;
+  WorkerTiming timing = 5;
+}
+
+message StatusRequest {}
+
+enum WorkerState {
+  WORKER_STATE_UNSPECIFIED = 0;
+  WORKER_STATE_STARTING = 1;
+  WORKER_STATE_READY = 2;
+  WORKER_STATE_DRAINING = 3;
+}
+
+message StatusResponse {
+  string worker_id = 1;
+  string model_version = 2;
+  string model_sha256 = 3;
+  WorkerState state = 4;
+  uint32 queue_depth = 5;
+  uint32 queue_capacity = 6;
+  uint32 active_batches = 7;
+}
