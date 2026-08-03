@@ -1,0 +1,87 @@
+services:
+  gateway:
+    build: .
+    command: uvicorn gateway.app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - WORKERS=worker-1=worker-1:50051,worker-2=worker-2:50051,worker-3=worker-3:50051,worker-4=worker-4:50051
+    depends_on:
+      - worker-1
+      - worker-2
+
+  worker-1:
+    build: .
+    command: python -m worker.server
+    ports:
+      - "50051:50051"
+      - "9101:9100"
+    environment:
+      - WORKER_ID=worker-1
+      - WORKER_GRPC_PORT=50051
+      - WORKER_METRICS_PORT=9100
+      - MODEL_DIR=/models
+    volumes:
+      - ./artifacts/model:/models:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  worker-2:
+    build: .
+    command: python -m worker.server
+    ports:
+      - "50052:50051"
+      - "9102:9100"
+    environment:
+      - WORKER_ID=worker-2
+      - WORKER_GRPC_PORT=50051
+      - WORKER_METRICS_PORT=9100
+      - MODEL_DIR=/models
+    volumes:
+      - ./artifacts/model:/models:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  worker-3:
+    build: .
+    command: python -m worker.server
+    profiles:
+      - four-workers
+    ports:
+      - "50053:50051"
+      - "9103:9100"
+    environment:
+      - WORKER_ID=worker-3
+      - WORKER_GRPC_PORT=50051
+      - WORKER_METRICS_PORT=9100
+      - MODEL_DIR=/models
+    volumes:
+      - ./artifacts/model:/models:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  worker-4:
+    build: .
+    command: python -m worker.server
+    profiles:
+      - four-workers
+    ports:
+      - "50054:50051"
+      - "9104:9100"
+    environment:
+      - WORKER_ID=worker-4
+      - WORKER_GRPC_PORT=50051
+      - WORKER_METRICS_PORT=9100
+      - MODEL_DIR=/models
+    volumes:
+      - ./artifacts/model:/models:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
