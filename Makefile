@@ -1,4 +1,4 @@
-.PHONY: setup proto test lint up smoke down
+.PHONY: setup proto test lint up smoke e2e benchmark report down
 
 setup:
 	python3.12 -m venv .venv
@@ -20,6 +20,15 @@ up:
 
 smoke:
 	.venv/bin/python -c "import urllib.request, json; resp=urllib.request.urlopen('http://localhost:8000/health/ready'); print(resp.read().decode())"
+
+e2e:
+	.venv/bin/python scripts/failure_scenario.py
+
+benchmark:
+	.venv/bin/python scripts/benchmark.py --concurrency 32 --duration 15 --trial-id trial-1 --output benchmarks/raw/trial-1.ndjson
+
+report:
+	.venv/bin/python scripts/summarize_results.py --ndjson benchmarks/raw/trial-1.ndjson --output benchmarks/reports/trial-1-report.md
 
 down:
 	docker compose down
